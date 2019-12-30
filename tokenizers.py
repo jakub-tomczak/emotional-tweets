@@ -5,6 +5,7 @@ RE_SPACES = re.compile("\s+")
 RE_HASHTAG = re.compile("[@#][_a-z0-9]+")
 RE_EMOTICONS = re.compile("(:-?\))|(:p)|(:d+)|(:-?\()|(:/)|(;-?\))|(<3)|(=\))|(\)-?:)|(:'\()|(8\))")
 RE_HTTP = re.compile("http(s)?://[/\.a-z0-9]+")
+RE_WWW = re.compile("www\.[a-z0-9\.]+")
 RE_PUNCTUATIONS = re.compile("['',.?!\-\+=\(\)\{\}\[\]%$&*~]")
 
 

@@ -2,7 +2,7 @@ from data_loader import load_dataset
 from nltk_helper import initialize_nltk
 from tokenizers import TweetTokenizer, NltkTokenizer
 from steemers import DefaultStemmer
-from words_filter import NltkStopwordsFilter, PunctuationsFilter
+from words_filter import NltkStopwordsFilter, PunctuationsFilter, HyperLinkFilter, HashTagFilter
 
 
 def process_tweets(data):
@@ -14,6 +14,8 @@ def process_tweets(data):
         tokens = TweetTokenizer.tokenize(tweet)
         removed_punctuations = PunctuationsFilter.filter(tokens)
         filtered_tweets = NltkStopwordsFilter.filter(removed_punctuations)
+        filtered_tweets = HyperLinkFilter.filter(filtered_tweets)
+        filtered_tweets = HashTagFilter.filter(filtered_tweets)
         stemmed = DefaultStemmer.stem(filtered_tweets)
         processed_tweets.append(stemmed)
     return new_data.Category, processed_tweets

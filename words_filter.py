@@ -1,10 +1,15 @@
 import re
-from tokenizers import RE_PUNCTUATIONS
+from tokenizers import RE_PUNCTUATIONS, RE_HTTP, RE_HASHTAG, RE_WWW
 
 
 class WordsFilter:
     @staticmethod
     def filter(tokens):
+        '''
+        Method that removes some tokens from tokens list.
+        :param tokens: list of tokens ['A', 'short', 'list']
+        :return: flitered tokens
+        '''
         pass
 
     @staticmethod
@@ -66,3 +71,16 @@ class PunctuationsFilter(WordsFilter):
     @staticmethod
     def filter(tokens):
         return WordsFilter.remove_words_using_regex(tokens, RE_PUNCTUATIONS)
+
+
+class HyperLinkFilter(WordsFilter):
+    @staticmethod
+    def filter(tokens):
+        filtered_http = WordsFilter.remove_words_using_regex(tokens, RE_WWW)
+        return WordsFilter.remove_words_using_regex(filtered_http, RE_HTTP)
+
+
+class HashTagFilter(WordsFilter):
+    @staticmethod
+    def filter(tokens):
+        return WordsFilter.remove_words_using_regex(tokens, RE_HASHTAG)
