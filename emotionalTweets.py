@@ -32,9 +32,13 @@ def main():
 
     #processed_tweets = process_tweets(train[10:20])
     import logistic_regression_model
+    import sgd_model
+
     X_train, y_train = train[1:3000].Tweet, train[1:3000].Category
     X_test, y_test = train[3001:].Tweet, train[3001:].Category
-    logistic_regression_model.fit(X_train, y_train, X_test, y_test, process_tweet)
+
+    sgd_model.fit(X_train, y_train, X_test, y_test, process_tweet)
+    # logistic_regression_model.fit(X_train, y_train, X_test, y_test, process_tweet)
 
 
 
