@@ -2,11 +2,11 @@ import nltk
 import re
 
 RE_SPACES = re.compile("\s+")
-RE_HASHTAG = re.compile("[@#][_a-z0-9]+")
-RE_EMOTICONS = re.compile("(:-?\))|(:p)|(:d+)|(:-?\()|(:/)|(;-?\))|(<3)|(=\))|(\)-?:)|(:'\()|(8\))")
+RE_HASHTAG = re.compile("[@#][_a-zA-Z0-9]+")
+RE_EMOTICONS = re.compile("(:-?\))|(:p)|(:d+)|(:-?\()|(:/)|(;-?\))|(<3)|(=\))|(\)-?:)|(:'\()|(8\))|(8-\))")
 RE_HTTP = re.compile("http(s)?://[/\.a-z0-9]+")
 RE_WWW = re.compile("www\.[a-z0-9\.]+")
-RE_PUNCTUATIONS = re.compile("['',.?!\-\+=\(\)\{\}\[\]%$&*~]")
+RE_PUNCTUATIONS = re.compile("['',.?!\-\+=\(\)\{\}\[\]%$&*~``]")
 
 
 class Tokenizer():
