@@ -7,6 +7,7 @@ RE_EMOTICONS = re.compile("(:-?\))|(:p)|(:d+)|(:-?\()|(:/)|(;-?\))|(<3)|(=\))|(\
 RE_HTTP = re.compile("http(s)?://[/\.a-z0-9]+")
 RE_WWW = re.compile("www\.[a-z0-9\.]+")
 RE_PUNCTUATIONS = re.compile("['',.?!\-\+=\(\)\{\}\[\]%$&*~``]")
+RE_SPECIAL = re.compile(":[''\-\+=\(\)\{\}\[\]%$&*~``]")
 
 
 class Tokenizer():

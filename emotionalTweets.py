@@ -1,24 +1,26 @@
 from data_loader import load_dataset
 from nltk_helper import initialize_nltk
-from tokenizers import TweetTokenizer, NltkTokenizer
+from tokenizers import TweetTokenizer
 from steemers import DefaultStemmer
-from words_filter import NltkStopwordsFilter, PunctuationsFilter, HyperLinkFilter, HashTagFilter
+from transformers import EmoticonsTransformer
+from words_filter import NltkStopwordsFilter, HyperLinkFilter, HashTagFilter, \
+    SpecialCharactersFilter
+
+
+def process_tweet(tweet):
+    tokens = TweetTokenizer.tokenize(tweet)
+    removed_special_chars = SpecialCharactersFilter.filter(tokens)
+    filtered_tweets = NltkStopwordsFilter.filter(removed_special_chars)
+    filtered_tweets = HyperLinkFilter.filter(filtered_tweets)
+    filtered_tweets = HashTagFilter.filter(filtered_tweets)
+    transformed = EmoticonsTransformer.transform(filtered_tweets)
+    return DefaultStemmer.stem(transformed)
 
 
 def process_tweets(data):
     new_data = data.loc[data.Tweet != "Not Available"]
-    processed_tweets = []
-    for row in new_data.iterrows():
-        row = row[1]
-        tweet = row[2]
-        tokens = TweetTokenizer.tokenize(tweet)
-        removed_punctuations = PunctuationsFilter.filter(tokens)
-        filtered_tweets = NltkStopwordsFilter.filter(removed_punctuations)
-        filtered_tweets = HyperLinkFilter.filter(filtered_tweets)
-        filtered_tweets = HashTagFilter.filter(filtered_tweets)
-        stemmed = DefaultStemmer.stem(filtered_tweets)
-        processed_tweets.append(stemmed)
-    return new_data.Category, processed_tweets
+    new_data['processed'] = new_data['Tweet'].apply(process_tweet)
+    return new_data
 
 
 def main():

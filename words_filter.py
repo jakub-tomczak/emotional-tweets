@@ -1,5 +1,5 @@
 import re
-from tokenizers import RE_PUNCTUATIONS, RE_HTTP, RE_HASHTAG, RE_WWW
+from tokenizers import RE_PUNCTUATIONS, RE_HTTP, RE_HASHTAG, RE_WWW, RE_SPECIAL
 
 
 class WordsFilter:
@@ -71,6 +71,12 @@ class PunctuationsFilter(WordsFilter):
     @staticmethod
     def filter(tokens):
         return WordsFilter.remove_words_using_regex(tokens, RE_PUNCTUATIONS)
+
+
+class SpecialCharactersFilter(WordsFilter):
+    @staticmethod
+    def filter(tokens):
+        return WordsFilter.remove_words_using_regex(tokens, RE_SPECIAL)
 
 
 class HyperLinkFilter(WordsFilter):
