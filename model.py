@@ -1,30 +1,71 @@
-from keras.models import Sequential
-from keras import layers
-from sklearn.linear_model import LogisticRegression
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
-from data_loader import *
-from nltk.stem.lancaster import LancasterStemmer
-import nltk
-from emotionalTweets import process_tweets
-from nltk.stem.lancaster import LancasterStemmer
+import pickle
+import os
 
 
-categories ={'negative':[1,0,0],'neutral':[0,1,0],'positive':[0,0,1]}
+class Model:
+    def __init__(self, train_data, tweet_processor_function, percentage_of_train_data=.7):
+        self.model = None
+        self.train_data = train_data
+        self.number_of_samples = self.train_data.shape[0]
+        self.train_num = 0
+        self.test_num = 0
+        self.X_train, self.y_train = None, None
+        self.X_test, self.y_test = None, None
+        self.split_into_train_and_test(percentage_of_train_data)
+        self.tweet_preprocessor = tweet_processor_function
 
-def get_model(input_dim):
-    model = Sequential()
-    model.add(layers.Dense(10, input_dim=input_dim, activation='relu'))
-    model.add(layers.Dense(1, activation='sigmoid'))
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-    return model
+    def split_into_train_and_test(self, percentage_of_train_data):
+        '''
+        Splits self.train_data into self.X_train, self.y_train and self.X_test, self.y_test
+        with respect to the percentage_of_train_data arg.
+        :param percentage_of_train_data:
+        :return: None
+        '''
+        self.train_num = int(self.number_of_samples * percentage_of_train_data)
+        self.test_num = self.number_of_samples - self.train_num
+        self.X_train, self.y_train = self.train_data[:self.train_num].Tweet, self.train_data[:self.train_num].Category
+        self.X_test, self.y_test = self.train_data[self.train_num:].Tweet, self.train_data[self.train_num:].Category
+
+    def train(self):
+        pass
+
+    def evaluate_model(self):
+        pass
+
+    def test(self, data):
+        pass
+
+    def save_model(self, name='', save_dir='models'):
+        pass
+
+    def try_loading_model(self, name='', load_dir='models'):
+        pass
+
+    def model_name(self, name=''):
+        return Model.get_model_name(self) if name == '' else name
+
+    @staticmethod
+    def get_model_name(model):
+        return type(model).__name__
 
 
-def train(model, X_train, y_train,X_test,y_test):
-    history = model.fit(X_train, y_train, epochs=100, verbose=False, validation_data=(X_test, y_test),batch_size=10)
-    loss, accuracy = model.evaluate(X_train, y_train, verbose=False)
-    print("Training Accuracy: {:.4f}".format(accuracy))
-    loss, accuracy = model.evaluate(X_test, y_test, verbose=False)
-    print("Testing Accuracy:  {:.4f}".format(accuracy))
+class ScikitModel(Model):
+    def save_model(self, name='', save_dir='models'):
+        path = os.path.join(save_dir, self.model_name(name))
+        if not os.path.exists(os.path.dirname(path)):
+            os.makedirs(save_dir)
+        with open(path, 'wb') as f:
+            pickle.dump(self.model, f)
 
-
+    def try_loading_model(self, name='', load_dir='models'):
+        path = os.path.join(load_dir, self.model_name(name))
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                try:
+                    self.model = pickle.load(f)
+                except:
+                    print("Failed to read model")
+                    return False
+            return True
+        else:
+            return False
