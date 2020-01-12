@@ -2,11 +2,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-categories ={'negative':[1,0,0],'neutral':[0,1,0],'positive':[0,0,1]}
+categories ={'negative':-1,'neutral':0,'positive':1}
 
 
 def load_dataset() -> (pd.DataFrame, pd.DataFrame):
-    train = pd.read_csv('data/train.csv')
+    train = pd.read_csv('data/train.csv', na_values='Not Available')
     test = pd.read_csv('data/test.csv')
     train['class'] = train.apply(classes,axis=1)
     return train, test
