@@ -8,7 +8,7 @@ import re
 import itertools
 import time
 
-
+import pickle
 import os
 from nltk.stem.wordnet import WordNetLemmatizer 
 from data_loader import load_dataset
@@ -62,12 +62,26 @@ if __name__ == '__main__':
     train = train[~(pd.isna(train.Tweet))]
 
     train['Tweet'] = train['Tweet'].map(lambda x: cleaning(x))
+    test['Tweet'] = test['Tweet'].map(lambda x: cleaning(x))
+
     train = train.reset_index(drop=True)
+    test = test.reset_index(drop=True)
+    print(1)
     for i in range(len(train)):
         words = train.Tweet[i][0]
         for j in range(len(train.Tweet[i])-1):
             words+= ' ' + train.Tweet[i][j+1]
         train.Tweet[i] = words
+
+    for i in range(len(test)):
+        words = test.Tweet[i][0]
+        for j in range(len(test.Tweet[i])-1):
+            words+= ' ' + test.Tweet[i][j+1]
+        test.Tweet[i] = words
+
+    print(2)
+
+    ids = test['Id']
 
 
     x_train, x_test, y_train, y_test = train_test_split(train.Tweet, train['Category'], test_size=0.25, random_state=0)
@@ -80,9 +94,11 @@ if __name__ == '__main__':
     vectorizer = TfidfVectorizer(min_df=3, max_df=0.9)
     train_vectors = vectorizer.fit_transform(x_train)
     test_vectors = vectorizer.transform(x_test)
+    testing_vectors = vectorizer.transform(test['Tweet'])
     model = svm.SVC(kernel='linear') 
     model.fit(train_vectors, y_train) 
     predicted_sentiment = model.predict(test_vectors)
+    predicted_test = model.predict(testing_vectors)
 
     print(classification_report(y_test, predicted_sentiment))
 
@@ -95,4 +111,15 @@ if __name__ == '__main__':
 
     elapsed_time = time.time() - start_time
     print ("processing time:", elapsed_time, "seconds")
+
+    s = pickle.dumps(model)
+    file_object = open("test.csv","w")
+    file_object.write('Id,Category \n')
+    for i in range(len(predicted_test)):
+        temp = str(format(ids[i],'.0f')) +','+ str(predicted_test[i]) + '\n'
+        file_object.write(temp)
+
+
+
+
 
