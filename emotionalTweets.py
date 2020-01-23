@@ -7,6 +7,7 @@ from transformers import EmoticonsTransformer
 from words_filter import NltkStopwordsFilter, HyperLinkFilter, HashTagFilter, \
     SpecialCharactersFilter
 import os
+import pandas as pd
 
 
 def process_tweet(tweet):
@@ -33,12 +34,24 @@ def analyse_data(data):
 
 
 def test_for_submission(model, data, output_dir='data'):
-    processed_tweets = data.Tweet.apply(process_tweet)
-    data['results'] = model.test(processed_tweets)
-    data.to_csv(
+    # classify Not Available as positive class
+    not_available_tweets = data.loc[data.Tweet == "Not Available"]
+    not_available_tweets['results'] = 'positive'
+
+    # get rows without Not Available
+    data = data.loc[data.Tweet != "Not Available"]
+
+    if model.transformations_reqiured:
+        tweets = data.Tweet.apply(process_tweet)
+        data['results'] = model.test(tweets)
+    else:
+        data['results'] = model.test(data.Tweet)
+
+    pd.concat([not_available_tweets, data]).to_csv(
         path_or_buf=os.path.join(output_dir, 'submission.csv'),
         columns=['Id', 'results'],
-        header=['Id,Category']
+        header=['Id', 'Category'],
+        index=False
     )
     return data
 
@@ -46,19 +59,19 @@ def test_for_submission(model, data, output_dir='data'):
 def main():
     train, test = load_dataset()
 
-    train = train
     if not initialize_nltk():
         exit(1)
 
-    model = LogisticRegressionModel(train, process_tweet)
-    model.train()
-    # if not model.try_loading_model():
-    #     print('model not saved before')
-    #     model.train()
-    #     model.save_model()
-    # else:
-    #     print('loaded model')
-    # test_for_submission(model, test)
+    model = LogisticRegressionModel(train,
+                                    process_tweet,
+                                    transformations_required=False)
+    if not model.try_loading_model():
+        print(f'model not saved before {model.name}')
+        model.train()
+        model.save_model()
+    else:
+        print(f'loaded model: {model.name}')
+    test_for_submission(model, test)
 
 
 if __name__ == "__main__":

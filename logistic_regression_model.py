@@ -30,7 +30,7 @@ class LogisticRegressionModel(ScikitModel):
         gs_lr_tfidf = GridSearchCV(lr_tfidf, param_grid,
                                    scoring='accuracy',
                                    cv=5, verbose=1,
-                                   n_jobs=4)
+                                   n_jobs=6)
         gs_lr_tfidf.fit(self.X_train, self.y_train)
         print('Zestaw najlepszych parametrów: %s ' % gs_lr_tfidf.best_params_)
         print('Dokładność sprawdzianu krzyżowego: %.3f' % gs_lr_tfidf.best_score_)

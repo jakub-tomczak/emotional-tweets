@@ -3,12 +3,21 @@ import os
 
 
 class Model:
-    def __init__(self, train_data, tweet_processor_function, percentage_of_train_data=.7):
+    def __init__(self, train_data, tweet_processor_function, percentage_of_train_data=.7,
+                 transformations_required=True):
+        '''
+        Base class for models.
+        :param train_data:
+        :param tweet_processor_function:
+        :param percentage_of_train_data:
+        :param transformations_required: Is transformation required before putting data into fit or predict method.
+        '''
         self.model = None
         self.train_data = train_data
         self.number_of_samples = self.train_data.shape[0]
         self.train_num = 0
         self.test_num = 0
+        self.transformations_reqiured = transformations_required
         self.X_train, self.y_train = None, None
         self.X_test, self.y_test = None, None
         self.split_into_train_and_test(percentage_of_train_data)
@@ -27,6 +36,9 @@ class Model:
         self.X_test, self.y_test = self.train_data[self.train_num:].Tweet, self.train_data[self.train_num:].Category
 
     def train(self):
+        '''
+        :return: nothing
+        '''
         pass
 
     def evaluate_model(self):
@@ -42,7 +54,11 @@ class Model:
         pass
 
     def model_name(self, name=''):
-        return Model.get_model_name(self) if name == '' else name
+        return self.name if name == '' else name
+
+    @property
+    def name(self):
+        return Model.get_model_name(self)
 
     @staticmethod
     def get_model_name(model):
@@ -55,12 +71,12 @@ class ScikitModel(Model):
         if not os.path.exists(os.path.dirname(path)):
             os.makedirs(save_dir)
         with open(path, 'wb') as f:
-            pickle.dump(self.model, f)
+            pickle.dump(self.model, f, protocol=4)
 
     def try_loading_model(self, name='', load_dir='models'):
         path = os.path.join(load_dir, self.model_name(name))
         if os.path.exists(path):
-            with open(path, 'r') as f:
+            with open(path, 'rb') as f:
                 try:
                     self.model = pickle.load(f)
                 except:

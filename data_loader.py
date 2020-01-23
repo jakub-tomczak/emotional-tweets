@@ -6,9 +6,13 @@ categories ={'negative':[1,0,0],'neutral':[0,1,0],'positive':[0,0,1]}
 
 
 def load_dataset() -> (pd.DataFrame, pd.DataFrame):
-    train = pd.read_csv('data/train.csv')
-    test = pd.read_csv('data/test.csv')
-    train['class'] = train.apply(classes,axis=1)
+    train = pd.read_csv('data/train.csv', dtype=str)
+    train = train.loc[pd.notna(train['Id'])]
+
+    test = pd.read_csv('data/test.csv', dtype=str)
+    test = test.loc[pd.notna(test['Id'])]
+
+    train['class'] = train.apply(classes, axis=1)
     return train, test
 
 
