@@ -1,25 +1,43 @@
+import os
+import pickle
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
+categories = {'negative': [1, 0, 0], 'neutral': [0, 1, 0], 'positive': [0, 0, 1]}
 
-categories ={'negative':[1,0,0],'neutral':[0,1,0],'positive':[0,0,1]}
+
+def load_processed_data(data_dir) -> (pd.DataFrame, pd.DataFrame):
+    def load_file(filename):
+        path = os.path.join(data_dir, f'{filename}.pkl')
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                try:
+                    return pickle.load(f)
+                except:
+                    print(f"Failed to load processed data from {path}")
+                    return None
+        else:
+            return None
+
+    return load_file('train'), load_file('test')
 
 
-def load_dataset() -> (pd.DataFrame, pd.DataFrame):
-    train = pd.read_csv('data/train.csv', dtype=str)
-    train = train.loc[pd.notna(train['Id'])]
+def load_dataset(data_dir) -> (pd.DataFrame, pd.DataFrame):
+    def load_file(filename):
+        data = pd.read_csv(os.path.join(data_dir, f'{filename}.csv'), dtype=str)
+        data = data.loc[pd.notna(data['Id'])]
+        return data
 
-    test = pd.read_csv('data/test.csv', dtype=str)
-    test = test.loc[pd.notna(test['Id'])]
-
+    train = load_file('train')
     train['class'] = train.apply(classes, axis=1)
-    return train, test
 
+    test = load_file('test')
+    return train, test
 
 
 def histograms(data):
     print(data.groupby('Category').count())
-
 
 
 def classes(row):

@@ -1,4 +1,4 @@
-from data_loader import load_dataset
+from data_loader import load_dataset, load_processed_data
 from logistic_regression_model import LogisticRegressionModel
 from nltk_helper import initialize_nltk
 from tokenizers import TweetTokenizer
@@ -8,6 +8,22 @@ from words_filter import NltkStopwordsFilter, HyperLinkFilter, HashTagFilter, \
     SpecialCharactersFilter
 import os
 import pandas as pd
+
+
+def save_processed_data(train_data, test_data):
+    def save_data(data, filename):
+        import pickle
+        path = os.path.join('data', f'{filename}.pkl')
+        with open(path, 'wb') as f:
+            pickle.dump(data, f, protocol=4)
+
+    a = process_tweets(train_data)
+    save_data(a, 'train')
+    print('saved train processed data')
+
+    b = process_tweets(test_data)
+    save_data(b, 'test')
+    print('saved test processed data')
 
 
 def process_tweet(tweet):
@@ -57,7 +73,19 @@ def test_for_submission(model, data, output_dir='data'):
 
 
 def main():
-    train, test = load_dataset()
+    model_requires_transformed_data = False
+    # if true, then we try to load processed data
+    try_loading_processed_data = True and model_requires_transformed_data
+
+    train, test = load_processed_data('data') if try_loading_processed_data\
+        else load_dataset('data')
+
+    # save processed data and save it as pickle object
+    # save_processed_data(train, test)
+
+    if any([train is None, test is None]):
+        print('Failed to load dataset')
+        exit(-1)
 
     if not initialize_nltk():
         exit(1)
