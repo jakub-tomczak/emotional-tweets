@@ -55,7 +55,7 @@ class NeuralNetworkModel(Model):
                          transformations_required=True)
 
         self.max_length_encoding = 200
-        self.subname = 'glove_model2'
+        self.subname = 'mse_glove_model2'
         p = os.path.join('data', 'data_tokenizer.pkl')
         text_encoder = None
         if os.path.exists(p):
@@ -122,7 +122,7 @@ class NeuralNetworkModel(Model):
             mode='auto',
             period=1)
         history = self.model.fit(self.X_train, self.y_train,
-                                 epochs=10,
+                                 epochs=20,
                                  validation_data=(self.X_test, self.y_test),
                                  batch_size=100,
                                  callbacks=[save_callback])
@@ -134,10 +134,13 @@ class NeuralNetworkModel(Model):
         print("Testing Accuracy:  {:.4f}, f1: {:.4f}".format(accuracy, f1))
 
     def test(self, data):
+        loss, accuracy, f1 = self.model.evaluate(self.X_test, self.y_test, verbose=False)
+        print("Testing Accuracy:  {:.4f}, f1: {:.4f}".format(accuracy, f1))
+
         data = self.encode_x_data(data)
         result = self.model.predict(data)
-        result = tf.math.argmax(result, axis=1).numpy()
-        return [NeuralNetworkModel.categories_decode[x] for x in result]
+        result_val = tf.math.argmax(result, axis=1).numpy()
+        return [NeuralNetworkModel.categories_decode[x] for x in result_val]
 
     def plot_result(self, history):
         plt.plot(history.history['accuracy'])
@@ -219,11 +222,18 @@ class NeuralNetworkModel(Model):
         #     layers.Dense(3, activation='softmax')
         # ])
 
+        # on test: acc: ~53%, f1 ~28%
         model = Sequential()
-        model.add(layers.Embedding(vocabulary_size, 100, weights=[embedding_matrix]))
+        model.add(layers.Embedding(vocabulary_size, 100, input_length=200, weights=[embedding_matrix])) #, weights=[embedding_matrix] #for glove
         model.add(layers.Conv1D(128, 5, activation='relu'))
         model.add(layers.GlobalMaxPooling1D())
         model.add(layers.Dense(3, activation='softmax'))
+
+
+        # model = Sequential()
+        # model.add(layers.Embedding(vocabulary_size, 100, input_length=200, weights=[embedding_matrix]))  # , weights=[embedding_matrix] #for glove
+        # model.add(layers.LSTM(100))
+        # model.add(layers.Dense(3, activation='softmax'))
 
         model.compile(optimizer=tf.keras.optimizers.Adam(1e-4),
                       loss='mse',
