@@ -13,7 +13,9 @@ def load_processed_data(data_dir) -> (pd.DataFrame, pd.DataFrame):
         if os.path.exists(path):
             with open(path, 'rb') as f:
                 try:
-                    return pickle.load(f)
+                    data = pickle.load(f)
+                    print('loaded from pickle')
+                    return data
                 except:
                     print(f"Failed to load processed data from {path}")
                     return None
@@ -33,6 +35,7 @@ def load_dataset(data_dir) -> (pd.DataFrame, pd.DataFrame):
     train['class'] = train.apply(classes, axis=1)
 
     test = load_file('test')
+    print('loaded from csv files')
     return train, test
 
 
