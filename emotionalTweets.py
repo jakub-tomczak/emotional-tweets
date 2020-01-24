@@ -8,7 +8,6 @@ from transformers import EmoticonsTransformer
 from words_filter import NltkStopwordsFilter, HyperLinkFilter, HashTagFilter, \
     SpecialCharactersFilter
 import os
-import pandas as pd
 
 
 def save_processed_data(train_data, test_data):
@@ -80,6 +79,12 @@ def test_for_submission(model, data, output_dir='data'):
 
 
 def main():
+    # preprocess glove
+    # from data_loader import save_glove, load_glove
+    # save_glove()
+    # glove = load_glove()
+
+    exit(-1)
     model_requires_transformed_data = True
     # if true, then we try to load processed data
     try_loading_processed_data = True and model_requires_transformed_data

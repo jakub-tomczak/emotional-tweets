@@ -7,6 +7,37 @@ import matplotlib.pyplot as plt
 categories = {'negative': [1, 0, 0], 'neutral': [0, 1, 0], 'positive': [0, 0, 1]}
 
 # categories ={'negative':-1,'neutral':0,'positive':1}
+glove_filename = 'data/glove.6B.100d'
+
+
+def save_glove():
+    import pickle
+    from numpy import asarray
+    embeddings_dictionary = dict()
+    with open(f'{glove_filename}.txt', encoding="utf8") as glove_file:
+        for line in glove_file:
+            records = line.split()
+            word = records[0]
+            vector_dimensions = asarray(records[1:], dtype='float32')
+            embeddings_dictionary[word] = vector_dimensions
+
+    with open(f'{glove_filename}.pkl', 'wb') as f:
+        pickle.dump(embeddings_dictionary, f, protocol=4)
+
+
+def load_glove():
+    path = f'{glove_filename}.pkl'
+    if os.path.exists(path):
+        with open(path, 'rb') as f:
+            try:
+                data = pickle.load(f)
+                print('loaded from pickle')
+                return data
+            except:
+                print(f"Failed to load processed data from {path}")
+    print('glove file doesn\'t extis')
+    exit(-1)
+
 
 def load_processed_data(data_dir) -> (pd.DataFrame, pd.DataFrame):
     def load_file(filename):
