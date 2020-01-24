@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 categories = {'negative': [1, 0, 0], 'neutral': [0, 1, 0], 'positive': [0, 0, 1]}
 
+# categories ={'negative':-1,'neutral':0,'positive':1}
 
 def load_processed_data(data_dir) -> (pd.DataFrame, pd.DataFrame):
     def load_file(filename):

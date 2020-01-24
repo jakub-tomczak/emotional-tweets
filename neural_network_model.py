@@ -157,3 +157,9 @@ class NeuralNetworkModel(Model):
         model.summary()
 
         return model
+
+    def set_data(X_train,y_train,X_test,y_test):
+        self.X_train = X_train
+        self.y_train = y_train
+        self.y_test = y_test
+        self.X_test = X_test
