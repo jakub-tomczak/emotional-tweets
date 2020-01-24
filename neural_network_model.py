@@ -7,7 +7,32 @@ import tensorflow_datasets as tfds
 import tensorflow as tf
 import numpy as np
 
+import matplotlib.pyplot as plt
+
 import pickle
+from data_loader import load_glove
+
+from keras import backend as K
+
+
+def recall_m(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+
+
+def precision_m(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
+
+
+def f1_m(y_true, y_pred):
+    precision = precision_m(y_true, y_pred)
+    recall = recall_m(y_true, y_pred)
+    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
 class NeuralNetworkModel(Model):
@@ -30,7 +55,7 @@ class NeuralNetworkModel(Model):
                          transformations_required=True)
 
         self.max_length_encoding = 200
-        self.subname = 'lstm'
+        self.subname = 'glove_model2'
         p = os.path.join('data', 'data_tokenizer.pkl')
         text_encoder = None
         if os.path.exists(p):
@@ -74,7 +99,13 @@ class NeuralNetworkModel(Model):
         self.y_train = load_or_encode(self.y_train, 'nn_y_train', NeuralNetworkModel.encode_y_data)
         self.y_test = load_or_encode(self.y_test, 'nn_y_test', NeuralNetworkModel.encode_y_data)
 
-        self.model = NeuralNetworkModel.get_model(self.X_train.shape[-1], self.data_tokenizer.vocab_size)
+        self.glove = load_glove(self.data_tokenizer.vocab_size, self.data_tokenizer)
+
+        self.model = NeuralNetworkModel.get_model(
+            self.X_train.shape[-1],
+            self.data_tokenizer.vocab_size,
+            embedding_matrix=self.glove
+        )
 
     def encode_x_data(self, data):
         return tf.keras.preprocessing.sequence.pad_sequences([self.data_tokenizer.encode(' '.join(x)) for x in data],
@@ -90,21 +121,57 @@ class NeuralNetworkModel(Model):
             save_weights_only=False,
             mode='auto',
             period=1)
-        self.model.fit(self.X_train, self.y_train,
-                       epochs=40,
-                       validation_data=(self.X_test, self.y_test),
-                       batch_size=100,
-                       callbacks=[save_callback])
-        loss, accuracy = self.model.evaluate(self.X_train, self.y_train, verbose=False)
-        print("Training Accuracy: {:.4f}".format(accuracy))
-        loss, accuracy = self.model.evaluate(self.X_test, self.y_test, verbose=False)
-        print("Testing Accuracy:  {:.4f}".format(accuracy))
+        history = self.model.fit(self.X_train, self.y_train,
+                                 epochs=10,
+                                 validation_data=(self.X_test, self.y_test),
+                                 batch_size=100,
+                                 callbacks=[save_callback])
+
+        self.plot_result(history)
+        loss, accuracy, f1 = self.model.evaluate(self.X_train, self.y_train, verbose=False)
+        print("Training Accuracy: {:.4f}, f1: {:.4f}".format(accuracy, f1))
+        loss, accuracy, f1 = self.model.evaluate(self.X_test, self.y_test, verbose=False)
+        print("Testing Accuracy:  {:.4f}, f1: {:.4f}".format(accuracy, f1))
 
     def test(self, data):
         data = self.encode_x_data(data)
         result = self.model.predict(data)
         result = tf.math.argmax(result, axis=1).numpy()
         return [NeuralNetworkModel.categories_decode[x] for x in result]
+
+    def plot_result(self, history):
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        # plt.show()
+        plt.savefig(f'plots/{self.subname}_accuracy.png')
+        plt.clf()
+
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        # plt.show()
+        plt.savefig(f'plots/{self.subname}_loss.png')
+        plt.clf()
+
+        plt.plot(history.history['f1_m'])
+        plt.plot(history.history['val_f1_m'])
+
+        plt.title('f1')
+        plt.ylabel('f1')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        # plt.show()
+        plt.savefig(f'plots/{self.subname}_f1.png')
+        plt.clf()
 
     @property
     def model_filename(self):
@@ -135,7 +202,7 @@ class NeuralNetworkModel(Model):
         return np.array([NeuralNetworkModel.categories_encode[item] for item in data])
 
     @staticmethod
-    def get_model(input_size, vocabulary_size):
+    def get_model(input_size, vocabulary_size, embedding_matrix=None):
         print(f'creating model with vocabulary size of {vocabulary_size} and input size {input_size}')
         # model = Sequential([
         #     layers.Embedding(vocabulary_size, 16, input_shape=(input_size,)),
@@ -144,22 +211,23 @@ class NeuralNetworkModel(Model):
         #     layers.Dense(3, activation='softmax')
         # ])
 
-        model = Sequential([
-            layers.Embedding(vocabulary_size, 64),
-            layers.Bidirectional(layers.LSTM(64)),
-            layers.Dense(64, activation='relu'),
-            layers.Dense(3, activation='softmax')
-        ])
+        # LSTM, accuracy 54% validation
+        # model = Sequential([
+        #     layers.Embedding(vocabulary_size, 64),
+        #     layers.Bidirectional(layers.LSTM(64)),
+        #     layers.Dense(64, activation='relu'),
+        #     layers.Dense(3, activation='softmax')
+        # ])
+
+        model = Sequential()
+        model.add(layers.Embedding(vocabulary_size, 100, weights=[embedding_matrix]))
+        model.add(layers.Conv1D(128, 5, activation='relu'))
+        model.add(layers.GlobalMaxPooling1D())
+        model.add(layers.Dense(3, activation='softmax'))
 
         model.compile(optimizer=tf.keras.optimizers.Adam(1e-4),
                       loss='mse',
-                      metrics=['accuracy'])
+                      metrics=['accuracy', f1_m])
         model.summary()
 
         return model
-
-    def set_data(X_train,y_train,X_test,y_test):
-        self.X_train = X_train
-        self.y_train = y_train
-        self.y_test = y_test
-        self.X_test = X_test

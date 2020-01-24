@@ -84,7 +84,6 @@ def main():
     # save_glove()
     # glove = load_glove()
 
-    exit(-1)
     model_requires_transformed_data = True
     # if true, then we try to load processed data
     try_loading_processed_data = True and model_requires_transformed_data

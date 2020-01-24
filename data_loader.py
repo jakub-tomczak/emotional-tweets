@@ -25,15 +25,27 @@ def save_glove():
         pickle.dump(embeddings_dictionary, f, protocol=4)
 
 
-def load_glove():
+def load_glove(vocab_size, tokenizer):
     path = f'{glove_filename}.pkl'
     if os.path.exists(path):
+        from numpy import zeros
         with open(path, 'rb') as f:
             try:
                 data = pickle.load(f)
+
+                embedding_matrix = zeros((vocab_size, 100))
+                for i in range(len(tokenizer.subwords)):
+                    embedding_vector = data.get(tokenizer.subwords[i])
+                    if embedding_vector is not None:
+                        embedding_matrix[i] = embedding_vector
+                # for Tokenizer from keras textPreprocessing
+                # for word, index in tokenizer.word_index.items():
+                #     embedding_vector = data.get(word)
+                #     if embedding_vector is not None:
+                #         embedding_matrix[index] = embedding_vector
                 print('loaded from pickle')
-                return data
-            except:
+                return embedding_matrix
+            except Exception as e:
                 print(f"Failed to load processed data from {path}")
     print('glove file doesn\'t extis')
     exit(-1)
