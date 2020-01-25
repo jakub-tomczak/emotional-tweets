@@ -55,7 +55,7 @@ class NeuralNetworkModel(Model):
                          transformations_required=True)
 
         self.max_length_encoding = 200
-        self.subname = 'mse_glove_model2'
+        self.subname = 'mse_glove_model2_processed_data'
         p = os.path.join('data', 'data_tokenizer.pkl')
         text_encoder = None
         if os.path.exists(p):
@@ -223,6 +223,20 @@ class NeuralNetworkModel(Model):
         # ])
 
         # on test: acc: ~53%, f1 ~28%
+        # the best so far when trained with glove, mse, Adam opt
+        # worst results with categorical_crossentropy
+        # categorical crossentropy:
+        # Training
+        # Accuracy: 0.7977, f1: 0.7114
+        # Testing
+        # Accuracy: 0.5193, f1: 0.3490
+
+        # mse
+        # Training
+        # Accuracy: 0.8083, f1: 0.7106
+        # Testing
+        # Accuracy: 0.5414, f1: 0.3807
+
         model = Sequential()
         model.add(layers.Embedding(vocabulary_size, 100, input_length=200, weights=[embedding_matrix])) #, weights=[embedding_matrix] #for glove
         model.add(layers.Conv1D(128, 5, activation='relu'))

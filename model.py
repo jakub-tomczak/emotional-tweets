@@ -32,8 +32,8 @@ class Model:
         '''
         self.train_num = int(self.number_of_samples * percentage_of_train_data)
         self.test_num = self.number_of_samples - self.train_num
-        self.X_train, self.y_train = self.train_data[:self.train_num].Tweet, self.train_data[:self.train_num].Category
-        self.X_test, self.y_test = self.train_data[self.train_num:].Tweet, self.train_data[self.train_num:].Category
+        self.X_train, self.y_train = self.train_data[:self.train_num].processed, self.train_data[:self.train_num].Category
+        self.X_test, self.y_test = self.train_data[self.train_num:].processed, self.train_data[self.train_num:].Category
 
     def train(self):
         '''
